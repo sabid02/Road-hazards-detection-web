@@ -22,21 +22,30 @@ const positions = [
 
 const MyMapComponent = () => {
   return (
-    <MapContainer
-      center={[23.806, 90.368]}
-      zoom={12}
-      style={{ height: "1000px", width: "100%" }}
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        height: "100vh",
+      }}
     >
-      <TileLayer
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        attribution='&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-      />
-      {positions.map((position, index) => (
-        <Marker key={index} position={[position.lat, position.lng]}>
-          <Popup>{position.description}</Popup>
-        </Marker>
-      ))}
-    </MapContainer>
+      <MapContainer
+        center={[23.806, 90.368]}
+        zoom={12}
+        style={{ height: "80vh", width: "80vw" }}
+      >
+        <TileLayer
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        />
+        {positions.map((position, index) => (
+          <Marker key={index} position={[position.lat, position.lng]}>
+            <Popup>{position.description}</Popup>
+          </Marker>
+        ))}
+      </MapContainer>
+    </div>
   );
 };
 

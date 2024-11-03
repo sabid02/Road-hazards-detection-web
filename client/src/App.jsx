@@ -4,7 +4,7 @@ import MyMapComponent from "./components/MyMapComponent"; // Adjust the import p
 const App = () => {
   return (
     <div>
-      <h1>Tamanna</h1>
+      <h1>Pothole on streets</h1>
       <MyMapComponent className />
     </div>
   );
