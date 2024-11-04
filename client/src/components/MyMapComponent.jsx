@@ -18,10 +18,11 @@ const MyMapComponent = () => {
 
   // Example locations array
   const locations = [
-    { lat: 23.800825, lng: 90.356745, description: "Mirpur 1, Dhaka" },
-    { lat: 23.81, lng: 90.412, description: "Banani, Dhaka" },
+    { lat: 23.828553, lng: 90.370353, description: "Soadul, Dhaka" },
+    { lat: 23.794052, lng: 90.353548, description: "pothole, Dhaka" },
     { lat: 23.78, lng: 90.279, description: "Dhamrai, Dhaka" },
-    { lat: 23.795, lng: 90.404, description: "Mohammadpur, Dhaka" },
+    { lat: 23.695197, lng: 90.418225, description: "Soadul tour, Dhaka" },
+    { lat: 23.727358, lng: 90.419567, description: "Zurin's Office, Dhaka" },
   ];
 
   useEffect(() => {
