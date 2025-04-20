@@ -28,9 +28,9 @@ const MyMapComponent = () => {
       description: "Zurin's Office, Dhaka",
     },
     {
-      lat: 23.79926204712249,
-      lng: 90.3601,
-      description: "Zurin's Office 2, Dhaka",
+      lat: 23.8092,
+      lng: 90.3709,
+      description: "Sabid home, Dhaka",
     },
   ];
 
