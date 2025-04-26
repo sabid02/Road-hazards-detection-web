@@ -11,6 +11,7 @@ const Camera = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [recordedVideoURL, setRecordedVideoURL] = useState(null);
   const [recordedChunks, setRecordedChunks] = useState([]);
+  const [photoLocation, setPhotoLocation] = useState(null); // 🛠️ Missing state added
   const navigate = useNavigate();
 
   const startCamera = async () => {
@@ -49,34 +50,27 @@ const Camera = () => {
   const capturePhoto = () => {
     if (!videoRef.current) return;
 
-    // Step 1: Get user location
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
         console.log("📍 Location:", latitude, longitude);
 
-        // Step 2: Capture photo
         const canvas = document.createElement("canvas");
         canvas.width = videoRef.current.videoWidth;
         canvas.height = videoRef.current.videoHeight;
         const ctx = canvas.getContext("2d");
 
-        // Draw the camera image
         ctx.drawImage(videoRef.current, 0, 0, canvas.width, canvas.height);
 
-        // Optional: Add location text on photo (bottom-left corner)
         ctx.fillStyle = "white";
         ctx.font = "20px Arial";
-        // Corrected line for drawing location text
-        ctx.fillText(`Lat: ${latitude.toFixed(4)}`, 10, canvas.height - 30); // Correct string interpolation
-        ctx.fillText(`Lng: ${longitude.toFixed(4)}`, 10, canvas.height - 10); // Correct string interpolation
+        ctx.fillText(`Lat: ${latitude.toFixed(4)}`, 10, canvas.height - 30);
+        ctx.fillText(`Lng: ${longitude.toFixed(4)}`, 10, canvas.height - 10);
 
-        // Convert to base64 image
         const imageDataURL = canvas.toDataURL("image/png");
         setCapturedImage(imageDataURL);
 
-        // Save location if needed separately
-        setPhotoLocation({ latitude, longitude }); // Save the location separately
+        setPhotoLocation({ latitude, longitude });
         console.log("✅ Photo captured with location!");
         stopCamera();
       },
@@ -90,7 +84,6 @@ const Camera = () => {
   const startRecording = async () => {
     if (!videoRef.current) return;
 
-    // 🔍 Get location first
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
@@ -115,7 +108,7 @@ const Camera = () => {
 
         drawFrame();
 
-        const canvasStream = canvas.captureStream(25); // 25 fps
+        const canvasStream = canvas.captureStream(25);
         const combinedStream = new MediaStream([
           ...canvasStream.getVideoTracks(),
           ...stream.getAudioTracks(),
@@ -162,20 +155,17 @@ const Camera = () => {
 
   return (
     <div className="w-full min-h-screen bg-gray-100">
-      {/* 🌐 Navbar */}
-      <nav className="w-full bg-gray-800 text-white px-6 py-4 flex justify-between items-center shadow">
+      <nav className="w-full bg-yellow-500 shadow-md text-white px-6 py-4 flex justify-between items-center">
         <h1 className="text-xl font-bold">📷 Camera App</h1>
         <button
           onClick={() => navigate("/")}
-          className="bg-gray-700 px-4 py-2 rounded hover:bg-gray-600 transition"
+          className="bg-black px-4 py-2 rounded hover:bg-gray-600 transition"
         >
           🏠 Home
         </button>
       </nav>
 
-      {/* 📸 Main Content */}
       <div className="max-w-xl mx-auto flex flex-col items-center gap-6 px-4 py-6">
-        {/* 🔵 Start Camera Button */}
         {!cameraStarted && (
           <div className="text-center">
             <p className="mb-2 text-gray-700">
@@ -183,14 +173,13 @@ const Camera = () => {
             </p>
             <button
               onClick={startCamera}
-              className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition"
+              className="bg-yellow-500 text-white px-4 py-2 rounded-md shadow-md hover:bg-yellow-600 transition duration-300"
             >
               🎬 Start Camera
             </button>
           </div>
         )}
 
-        {/* 🎥 Camera View */}
         {cameraStarted && (
           <div className="w-full flex flex-col items-center">
             <video
@@ -233,7 +222,6 @@ const Camera = () => {
           </div>
         )}
 
-        {/* 🖼️ Captured Image Display */}
         <div className="w-full flex flex-col items-center">
           {capturedImage && (
             <>
@@ -254,7 +242,6 @@ const Camera = () => {
           )}
         </div>
 
-        {/* 🎞️ Recorded Video Display */}
         <div className="w-full flex flex-col items-center">
           {recordedVideoURL && (
             <>
@@ -275,17 +262,15 @@ const Camera = () => {
           )}
         </div>
 
-        {/* ✅ Submit Button */}
         {(capturedImage || recordedVideoURL) && (
           <button
-            onClick={() => alert("Submitted!")} // Replace with actual logic
+            onClick={() => alert("Submitted!")} // 👈 you can replace with real submit logic
             className="bg-purple-600 text-white px-6 py-3 rounded-md hover:bg-purple-700 transition mt-4"
           >
             ✅ Submit
           </button>
         )}
 
-        {/* 🔺 Error Message */}
         {error && <p className="text-red-600 text-sm mt-2">Error: {error}</p>}
       </div>
     </div>

@@ -17,7 +17,7 @@ const Home = () => {
       </header>
 
       {/* Main Content */}
-      <main className="flex flex-col items-center gap-20">
+      <main className="flex flex-col items-center gap-20 mt-10">
         {/* Map Section */}
         <section className="w-full max-w-6xl bg-white rounded-3xl shadow-lg p-10 border border-blue-200">
           <h2 className="text-3xl font-bold text-yellow-500 mb-4 text-center drop-shadow-sm">
@@ -58,37 +58,39 @@ const Home = () => {
             className="w-full h-auto object-cover transition-transform duration-500 ease-in-out group-hover:scale-110"
           />
         </div>
+
+        {/* Road Safety Section */}
         <section className="w-full max-w-4xl bg-white rounded-3xl shadow-lg p-10 border border-blue-200 mt-10">
-          <section className="w-full max-w-4xl bg-white rounded-3xl shadow-lg p-10 border border-blue-200 mt-10">
-            <h2 className="text-2xl font-bold text-yellow-500 text-center mb-4">
-              🛣️ Importance of Road Safety
-            </h2>
-            <p className="text-gray-700 text-md leading-relaxed mb-4">
-              Road safety is a shared responsibility that affects everyone. By
-              adhering to traffic rules and being vigilant, we can significantly
-              reduce accidents and save lives. Key practices include:
-            </p>
-            <ul className="list-disc list-inside text-gray-700 mb-4">
-              <li>Always wear seat belts and ensure passengers do the same.</li>
-              <li>Obey speed limits and traffic signals.</li>
-              <li>Avoid distractions such as mobile phones while driving.</li>
-              <li>Never drive under the influence of alcohol or drugs.</li>
-              <li>Use pedestrian crossings and be alert as a pedestrian.</li>
-            </ul>
-            <p className="text-gray-700 text-md leading-relaxed">
-              By following these guidelines, we contribute to a safer
-              environment for all road users. Let's work together to make our
-              roads safer and more reliable.
-            </p>
-          </section>
+          <h2 className="text-2xl font-bold text-yellow-500 text-center mb-4">
+            🛣️ Importance of Road Safety
+          </h2>
+          <p className="text-gray-700 text-md leading-relaxed mb-4">
+            Road safety is a shared responsibility that affects everyone. By
+            adhering to traffic rules and being vigilant, we can significantly
+            reduce accidents and save lives. Key practices include:
+          </p>
+          <ul className="list-disc list-inside text-gray-700 mb-4">
+            <li>Always wear seat belts and ensure passengers do the same.</li>
+            <li>Obey speed limits and traffic signals.</li>
+            <li>Avoid distractions such as mobile phones while driving.</li>
+            <li>Never drive under the influence of alcohol or drugs.</li>
+            <li>Use pedestrian crossings and be alert as a pedestrian.</li>
+          </ul>
+          <p className="text-gray-700 text-md leading-relaxed">
+            By following these guidelines, we contribute to a safer environment
+            for all road users. Let's work together to make our roads safer and
+            more reliable.
+          </p>
         </section>
       </main>
 
       {/* Footer */}
       <footer className="text-center text-sm text-gray-500 mt-20 mb-6">
         &copy; {new Date().getFullYear()}{" "}
-        <span className="font-semibold">Road Hazards Tracker</span>. Built with
-        ❤️ for safer streets.
+        <span className="font-semibold text-yellow-500">
+          Road Hazards Tracker
+        </span>
+        . Built with <span className="text-red-500">❤️</span> for safer streets.
       </footer>
     </div>
   );
