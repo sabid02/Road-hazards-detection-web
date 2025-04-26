@@ -1,3 +1,6 @@
+# Ignore virtual environment folder
+venv/
+
 # Logs
 logs
 *.log
@@ -7,6 +10,7 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Node modules and build directories
 node_modules
 dist
 dist-ssr
