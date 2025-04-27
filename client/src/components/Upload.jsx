@@ -57,12 +57,13 @@ const Upload = () => {
         signal: controller.signal,
       });
       clearTimeout(timeoutId);
-
       if (!response.ok) {
         throw new Error(`Detection failed: ${response.statusText}`);
       }
 
       const data = await response.json();
+      console.log("Response:", data);
+
       setDetectionResults(data);
     } catch (err) {
       setError(err.message);
