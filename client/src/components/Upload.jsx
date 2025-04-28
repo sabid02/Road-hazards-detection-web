@@ -218,17 +218,25 @@ const Upload = () => {
           <div className="p-4 bg-white rounded-lg shadow">
             <h3 className="text-lg font-bold mb-4">Detection Summary</h3>
 
-            <div className="grid grid-cols-2 gap-4 mb-4">
-              <div className="flex justify-between items-center">
-                <span>Total Detections:</span>
-                <span className="font-semibold">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              {/* Total Detections */}
+              <div className="flex justify-between items-center p-4 bg-gray-100 rounded-lg shadow-sm">
+                <span className="text-gray-700 font-medium">
+                  Total Detections:
+                </span>
+                <span className="text-indigo-600 font-bold text-lg">
                   {detectionResults.detections.length}
                 </span>
               </div>
+
+              {/* Class-wise Detections */}
               {Object.entries(CLASS_NAMES).map(([id, name]) => (
-                <div key={id} className="flex justify-between items-center">
-                  <span>{name}s:</span>
-                  <span className="font-semibold">
+                <div
+                  key={id}
+                  className="flex justify-between items-center p-4 bg-gray-50 hover:bg-gray-100 transition rounded-lg shadow-sm"
+                >
+                  <span className="text-gray-700">{name}s:</span>
+                  <span className="text-green-600 font-semibold">
                     {
                       detectionResults.detections.filter(
                         (d) => d.class_id == id
@@ -237,6 +245,16 @@ const Upload = () => {
                   </span>
                 </div>
               ))}
+            </div>
+            <div className="flex flex-col sm:flex-row sm:justify-between items-center bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 font-semibold p-4 mt-6 rounded-lg shadow-md space-y-2 sm:space-y-0 sm:space-x-4">
+              <div className="flex items-center">
+                <span className="mr-2">🌍 Longitude:</span>
+                <span>{detectionResults.longitude}</span>
+              </div>
+              <div className="flex items-center">
+                <span className="mr-2">📍 Latitude:</span>
+                <span>{detectionResults.latitude}</span>
+              </div>
             </div>
 
             <details className="mt-4">

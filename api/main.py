@@ -1,7 +1,7 @@
-from fastapi import FastAPI, UploadFile, File
+from fastapi import FastAPI, UploadFile, File, Depends
 from detect import read_imagefile, detect_objects
 from database import get_db
-from datetime import datetime
+from datetime import datetime, timezone
 from fastapi.middleware.cors import CORSMiddleware
 from extract import (
     extract_coordinates_from_image_bytes,
@@ -10,7 +10,7 @@ from extract import (
 
 
 app = FastAPI()
-db = get_db()
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173"],  # Your frontend URL
@@ -18,11 +18,11 @@ app.add_middleware(
     allow_methods=["*"],  # Allow all methods like POST, GET
     allow_headers=["*"],  # Allow all headers
 )
-collection = db["detections"]
 
 
 @app.post("/detect/")
-async def detect(file: UploadFile = File(...)):
+async def detect(file: UploadFile = File(...), db=Depends(get_db)):
+    collection = db["detections"]
     contents = await file.read()
 
     if file.content_type.startswith("image/"):
@@ -46,7 +46,7 @@ async def detect(file: UploadFile = File(...)):
             record = {
                 "detections": detections,
                 "location": {"latitude": latitude, "longitude": longitude},
-                "timestamp": datetime.utcnow(),
+                "timestamp": datetime.now(timezone.utc),
             }
             collection.insert_one(record)
             return {
@@ -72,3 +72,8 @@ async def detect(file: UploadFile = File(...)):
 @app.get("/")
 def root():
     return {"message": "Pothole Detection Backend Running!"}
+
+
+db = get_db()
+print(db.list_collection_names())
+print("MongoDB connection established successfully.")
