@@ -35,9 +35,9 @@ async def detect(file: UploadFile = File(...), db=Depends(get_db)):
         return {"message": "Unsupported file type"}
 
     # 👇👇 ADD THESE PRINTS for debugging
-    print("File received:", file.filename)
-    print("Latitude extracted:", latitude)
-    print("Longitude extracted:", longitude)
+    # print("File received:", file.filename)
+    # print("Latitude extracted:", latitude)
+    # print("Longitude extracted:", longitude)
 
     if image is not None:
         detections = detect_objects(image)
@@ -77,3 +77,21 @@ def root():
 db = get_db()
 print(db.list_collection_names())
 print("MongoDB connection established successfully.")
+
+
+@app.get("/locations/")
+async def get_locations(db=Depends(get_db)):
+    collection = db["detections"]
+    cursor = collection.find({}, {"location": 1, "detections.class_name": 1, "_id": 0})
+    locations = list(cursor)  # <-- Important: make it a list first!
+
+    for location in locations:
+        print("location: ", location)
+
+    return [
+        {
+            "location": location["location"],
+            "class_name": location["detections"][0]["class_name"],
+        }
+        for location in locations
+    ]

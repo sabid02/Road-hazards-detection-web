@@ -1,38 +1,59 @@
 import React, { useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import L from "leaflet";
-import markerIcon from "leaflet/dist/images/marker-icon.png";
-import markerIcon2x from "leaflet/dist/images/marker-icon-2x.png";
-import markerShadow from "leaflet/dist/images/marker-shadow.png";
 import "leaflet/dist/leaflet.css";
 
-// Set default marker icons
-delete L.Icon.Default.prototype._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: markerIcon2x,
-  iconUrl: markerIcon,
-  shadowUrl: markerShadow,
+// Custom icons
+const redIcon = new L.Icon({
+  iconUrl:
+    "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-red.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.9.3/dist/images/marker-shadow.png",
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
 });
+
+const blueIcon = new L.Icon({
+  iconUrl:
+    "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-blue.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.9.3/dist/images/marker-shadow.png",
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
+});
+
+const greenIcon = new L.Icon({
+  iconUrl:
+    "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-green.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.9.3/dist/images/marker-shadow.png",
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
+});
+
+const defaultIcon = new L.Icon.Default();
 
 const MyMapComponent = () => {
   const [position, setPosition] = useState(null);
+  const [locations, setLocations] = useState([]);
 
-  const locations = [
-    { lat: 23.828553, lng: 90.370353, description: "Soadul, Dhaka" },
-    { lat: 23.794052, lng: 90.353548, description: "Pothole, Dhaka" },
-    { lat: 23.78, lng: 90.279, description: "Dhamrai, Dhaka" },
-    { lat: 23.695197, lng: 90.418225, description: "Soadul tour, Dhaka" },
-    {
-      lat: 23.727357299999998,
-      lng: 90.4195674,
-      description: "Zurin's Office, Dhaka",
-    },
-    {
-      lat: 23.7957,
-      lng: 90.3598,
-      description: "Sabid home, Dhaka",
-    },
-  ];
+  useEffect(() => {
+    const fetchLocations = async () => {
+      try {
+        const response = await fetch("http://localhost:8000/locations/");
+        const data = await response.json();
+        console.log("Fetched locations:", data);
+        setLocations(data);
+      } catch (error) {
+        console.error("Error fetching locations:", error);
+      }
+    };
+
+    fetchLocations();
+  }, []);
 
   useEffect(() => {
     if (navigator.geolocation) {
@@ -55,23 +76,54 @@ const MyMapComponent = () => {
     );
   }
 
+  const getIconByClassName = (className) => {
+    if (className.toLowerCase() === "pothole") {
+      return redIcon;
+    } else if (className.toLowerCase() === "crack") {
+      return blueIcon;
+    } else if (className.toLowerCase() === "open manhole") {
+      return greenIcon;
+    } else {
+      return defaultIcon;
+    }
+  };
+
   return (
-    <div className="p-4 flex flex-col items-center">
-      <h2 className="text-xl font-semibold mb-4 text-gray-800 text-center">
-        Pothole, Cracks and Open manhole Locations Map
+    <div className="p-4 flex flex-col items-center bg-gray-50 min-h-screen">
+      <h2 className="text-2xl font-bold mb-6 text-gray-800 text-center">
+        🚧 Pothole, Crack, and Open Manhole Locations Map
       </h2>
-      <div className="w-full max-w-6xl h-[75vh] md:h-[80vh] rounded-xl overflow-hidden shadow-lg border border-gray-200">
-        <MapContainer center={position} zoom={12} className="h-full w-full">
+      <div className="w-full sm:max-w-6xl h-[85vh] rounded-2xl overflow-hidden shadow-2xl border-2 border-gray-300 px-2 sm:px-0">
+        <MapContainer
+          center={position}
+          zoom={12}
+          className="h-full w-full rounded-2xl"
+        >
           <TileLayer
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             attribution='&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
           />
           <Marker position={position}>
-            <Popup>Your Current Location</Popup>
+            <Popup>You are here 📍</Popup>
           </Marker>
+
           {locations.map((loc, index) => (
-            <Marker key={index} position={[loc.lat, loc.lng]}>
-              <Popup>{loc.description}</Popup>
+            <Marker
+              key={index}
+              position={[loc.location.latitude, loc.location.longitude]}
+              icon={getIconByClassName(loc.class_name)}
+            >
+              <Popup>
+                <div className="text-center">
+                  <h3 className="font-semibold capitalize">{loc.class_name}</h3>
+                  <p className="text-gray-600">
+                    Latitude: {loc.location.latitude.toFixed(4)}
+                  </p>
+                  <p className="text-gray-600">
+                    Longitude: {loc.location.longitude.toFixed(4)}
+                  </p>
+                </div>
+              </Popup>
             </Marker>
           ))}
         </MapContainer>

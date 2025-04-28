@@ -20,7 +20,7 @@ def extract_coordinates_from_image_bytes(image_bytes):
     # ✨ OCR on processed image
     text = pytesseract.image_to_string(gray)
 
-    print("OCR Text:", text)  # 👈 always print to debug
+    # print("OCR Text:", text)  # 👈 always print to debug
 
     lat_lon_pattern = r"([-+]?\d{1,3}\.\d+)[^\d]+([-+]?\d{1,3}\.\d+)"
     matches = re.findall(lat_lon_pattern, text)
@@ -56,7 +56,7 @@ def extract_coordinates_from_video_bytes(video_bytes):
 
             text = pytesseract.image_to_string(gray)
 
-            print("OCR Frame Text:", text)  # 👈 see what it reads
+            # print("OCR Frame Text:", text)  # 👈 see what it reads
 
             lat_lon_pattern = r"([-+]?\d{1,3}\.\d+)[^\d]+([-+]?\d{1,3}\.\d+)"
             matches = re.findall(lat_lon_pattern, text)

@@ -19,7 +19,7 @@ const Home = () => {
       {/* Main Content */}
       <main className="flex flex-col items-center gap-20 mt-10">
         {/* Map Section */}
-        <section className="w-full max-w-6xl bg-white rounded-3xl shadow-lg p-10 border border-blue-200">
+        <section className="w-full max-w-6xl bg-white rounded-3xl shadow-lg p-4 border border-blue-200">
           <h2 className="text-3xl font-bold text-yellow-500 mb-4 text-center drop-shadow-sm">
             🗺️ View and Track Hazards
           </h2>
