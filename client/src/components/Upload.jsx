@@ -1,6 +1,13 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 
 // Move constant outside component to prevent recreation
+
+const CLASS_COLORS = {
+  0: "#FF3B30",
+  1: "#007AFF",
+  2: "#34C759",
+};
+
 const CLASS_NAMES = {
   0: "Pothole",
   1: "Crack",
@@ -9,14 +16,29 @@ const CLASS_NAMES = {
 
 const Upload = () => {
   const [uploadedFile, setUploadedFile] = useState(null);
-  const [fileType, setFileType] = useState(null); // Track file type separately
-  const [mediaType, setMediaType] = useState(""); // Track MIME type
+  const [fileType, setFileType] = useState(null);
+  const [mediaType, setMediaType] = useState("");
   const [detectionResults, setDetectionResults] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
   const canvasRef = useRef(null);
   const imageRef = useRef(null);
+  const videoRef = useRef(null);
   const fileInputRef = useRef(null);
+  const animationFrameRef = useRef(null);
+  const [videoDimensions, setVideoDimensions] = useState({
+    width: 0,
+    height: 0,
+  });
+
+  const handleVideoLoadedMetadata = useCallback((e) => {
+    const video = e.target;
+    setVideoDimensions({
+      width: video.videoWidth,
+      height: video.videoHeight,
+    });
+  }, []);
 
   // Reset states when new file is uploaded
   const handleFileSelect = (event) => {
@@ -140,6 +162,90 @@ const Upload = () => {
     }
   }, [detectionResults]);
 
+  // Video detection drawing logic
+  const drawVideoDetections = useCallback(() => {
+    if (!videoRef.current || !canvasRef.current || !detectionResults) return;
+
+    const ctx = canvasRef.current.getContext("2d");
+    const video = videoRef.current;
+    const currentTime = video.currentTime;
+
+    // Use actual video dimensions from state
+    const scaleX = video.offsetWidth / videoDimensions.width;
+    const scaleY = video.offsetHeight / videoDimensions.height;
+
+    // Clear previous frame
+    ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
+
+    // Find matching detections
+    const frameDetections = detectionResults.detections.filter(
+      (d) => currentTime >= d.timestamp && currentTime < d.timestamp + 0.033
+    );
+
+    // Draw detections
+    frameDetections.forEach((det) => {
+      const [x1, y1, x2, y2] = det.bbox;
+
+      // Draw bounding box
+      ctx.beginPath();
+      ctx.strokeStyle = CLASS_COLORS[det.class_id];
+      ctx.lineWidth = 2;
+      ctx.rect(
+        x1 * scaleX,
+        y1 * scaleY,
+        (x2 - x1) * scaleX,
+        (y2 - y1) * scaleY
+      );
+      ctx.stroke();
+
+      // Draw label
+      ctx.fillStyle = CLASS_COLORS[det.class_id];
+      const label = CLASS_NAMES[det.class_id];
+      ctx.font = "14px Arial";
+      const textWidth = ctx.measureText(label).width;
+
+      // Label background
+      ctx.fillRect(x1 * scaleX - 2, y1 * scaleY - 20, textWidth + 4, 20);
+
+      // Label text
+      ctx.fillStyle = "white";
+      ctx.fillText(label, x1 * scaleX, y1 * scaleY - 5);
+    });
+
+    animationFrameRef.current = requestAnimationFrame(drawVideoDetections);
+  }, [detectionResults, videoDimensions]);
+
+  // Update video element with metadata handler
+  useEffect(() => {
+    const video = videoRef.current;
+    if (video) {
+      video.addEventListener("loadedmetadata", handleVideoLoadedMetadata);
+      return () =>
+        video.removeEventListener("loadedmetadata", handleVideoLoadedMetadata);
+    }
+  }, [handleVideoLoadedMetadata]);
+
+  // Handle video play
+  useEffect(() => {
+    const video = videoRef.current;
+    if (fileType === "video" && detectionResults) {
+      video.addEventListener("play", () => {
+        drawVideoDetections();
+      });
+
+      video.addEventListener("pause", () => {
+        cancelAnimationFrame(animationFrameRef.current);
+      });
+    }
+
+    return () => {
+      if (video) {
+        video.removeEventListener("play", drawVideoDetections);
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    };
+  }, [fileType, detectionResults, drawVideoDetections]);
+
   // Cleanup object URLs
   useEffect(
     () => () => {
@@ -209,17 +315,34 @@ const Upload = () => {
         )}
 
         {/* Image Preview with Canvas Overlay */}
+
+        {/* Media Preview */}
         {uploadedFile && (
           <div className="relative border rounded-lg overflow-hidden bg-gray-50">
             {fileType === "video" ? (
-              <video
-                key={uploadedFile}
-                controls
-                className="w-full h-auto max-h-96 object-contain"
-              >
-                <source src={uploadedFile} type={mediaType} />
-                Your browser does not support the video tag.
-              </video>
+              <>
+                <video
+                  ref={videoRef}
+                  key={uploadedFile}
+                  controls
+                  className="w-full h-auto max-h-96 object-contain"
+                  onPlay={drawVideoDetections}
+                  onPause={() =>
+                    cancelAnimationFrame(animationFrameRef.current)
+                  }
+                >
+                  <source src={uploadedFile} type={mediaType} />
+                  Your browser does not support the video tag.
+                </video>
+                <canvas
+                  ref={canvasRef}
+                  className="absolute top-0 left-0 w-full h-full pointer-events-none"
+                  style={{
+                    width: videoDimensions.width,
+                    height: videoDimensions.height,
+                  }}
+                />
+              </>
             ) : (
               <>
                 <img
@@ -227,10 +350,6 @@ const Upload = () => {
                   src={uploadedFile}
                   alt="Upload preview"
                   className="w-full h-auto max-h-96 object-contain"
-                  onError={(e) => {
-                    console.error("Error loading image:", e);
-                    setError("Failed to load image");
-                  }}
                 />
                 <canvas
                   ref={canvasRef}
@@ -240,7 +359,6 @@ const Upload = () => {
             )}
           </div>
         )}
-
         {/* Detection Results */}
         {detectionResults ? (
           detectionResults.detections?.length > 0 ? (
