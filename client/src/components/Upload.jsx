@@ -9,6 +9,8 @@ const CLASS_NAMES = {
 
 const Upload = () => {
   const [uploadedFile, setUploadedFile] = useState(null);
+  const [fileType, setFileType] = useState(null); // Track file type separately
+  const [mediaType, setMediaType] = useState(""); // Track MIME type
   const [detectionResults, setDetectionResults] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -21,30 +23,38 @@ const Upload = () => {
     const file = event.target.files[0];
     if (!file) return;
 
-    // Validate file type
-    if (!file.type.startsWith("image/")) {
-      setError("Please upload an image file (JPEG, PNG)");
+    if (!file.type.startsWith("image/") && !file.type.startsWith("video/")) {
+      setError("Please upload an image or video file (JPEG, PNG, MP4, AVI)");
       return;
     }
 
-    // Cleanup previous URL
     if (uploadedFile) URL.revokeObjectURL(uploadedFile);
 
-    setUploadedFile(URL.createObjectURL(file));
+    const fileUrl = URL.createObjectURL(file);
+    const isVideo = file.type.startsWith("video/");
+
+    setFileType(isVideo ? "video" : "image");
+    setMediaType(file.type);
+    setUploadedFile(fileUrl);
     setDetectionResults(null);
     setError(null);
   };
-
   const handleDetection = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
 
+      // Access the file from the ref
       const file = fileInputRef.current?.files?.[0];
+      console.log("File in handleDetection:", file); // Add debugging log here
+
+      // Check if a file is selected
       if (!file) {
-        throw new Error("Please select an image first");
+        setError("⚠️ Please select an image first.");
+        return;
       }
 
+      // Proceed with the detection logic if file is present
       const formData = new FormData();
       formData.append("file", file);
 
@@ -56,14 +66,15 @@ const Upload = () => {
         body: formData,
         signal: controller.signal,
       });
+
       clearTimeout(timeoutId);
+
       if (!response.ok) {
         throw new Error(`Detection failed: ${response.statusText}`);
       }
 
       const data = await response.json();
       console.log("Response:", data);
-
       setDetectionResults(data);
     } catch (err) {
       setError(err.message);
@@ -80,14 +91,12 @@ const Upload = () => {
 
     if (!ctx || !img || !detectionResults?.detections) return;
 
-    // Add this color palette above the component
     const CLASS_COLORS = {
-      0: "#FF3B30", // Pothole - Red
-      1: "#007AFF", // Crack - Blue
-      2: "#34C759", // Open Manhole - Green
+      0: "#FF3B30", // Pothole
+      1: "#007AFF", // Crack
+      2: "#34C759", // Open Manhole
     };
 
-    // Then modify the draw function in the useEffect:
     const draw = () => {
       const scaleX = img.width / img.naturalWidth;
       const scaleY = img.height / img.naturalHeight;
@@ -97,11 +106,13 @@ const Upload = () => {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
 
       detectionResults.detections.forEach((det) => {
-        const [x1, y1, x2, y2] = det.bbox;
-        const color = CLASS_COLORS[det.class_id] || "#000000"; // Fallback to black
-        const label = CLASS_NAMES[det.class_id] || `Class ${det.class_id}`;
+        if (!det || !Array.isArray(det.bbox) || det.bbox.length !== 4) return;
 
-        // Draw bounding box
+        const [x1, y1, x2, y2] = det.bbox;
+
+        const color = CLASS_COLORS[det.class_id] || "#000000";
+        const label = CLASS_NAMES?.[det.class_id] || `Class ${det.class_id}`;
+
         ctx.strokeStyle = color;
         ctx.lineWidth = 2;
         ctx.strokeRect(
@@ -111,14 +122,11 @@ const Upload = () => {
           (y2 - y1) * scaleY
         );
 
-        // Draw label background
         ctx.fillStyle = color;
         ctx.font = "14px Arial";
         const textWidth = ctx.measureText(label).width;
-
         ctx.fillRect(x1 * scaleX - 2, y1 * scaleY - 20, textWidth + 4, 20);
 
-        // Draw label text (keep text color white for contrast)
         ctx.fillStyle = "white";
         ctx.fillText(label, x1 * scaleX, y1 * scaleY - 5);
       });
@@ -150,7 +158,7 @@ const Upload = () => {
             <input
               ref={fileInputRef}
               type="file"
-              accept="image/*"
+              accept="image/*,video/*"
               className="hidden"
               onChange={handleFileSelect}
             />
@@ -203,17 +211,33 @@ const Upload = () => {
         {/* Image Preview with Canvas Overlay */}
         {uploadedFile && (
           <div className="relative border rounded-lg overflow-hidden bg-gray-50">
-            <img
-              ref={imageRef}
-              src={uploadedFile}
-              alt="Upload preview"
-              className="w-full h-auto max-h-96 object-contain"
-              onError={() => setError("Failed to load image")}
-            />
-            <canvas
-              ref={canvasRef}
-              className="absolute top-0 left-0 w-full h-full pointer-events-none"
-            />
+            {fileType === "video" ? (
+              <video
+                key={uploadedFile}
+                controls
+                className="w-full h-auto max-h-96 object-contain"
+              >
+                <source src={uploadedFile} type={mediaType} />
+                Your browser does not support the video tag.
+              </video>
+            ) : (
+              <>
+                <img
+                  ref={imageRef}
+                  src={uploadedFile}
+                  alt="Upload preview"
+                  className="w-full h-auto max-h-96 object-contain"
+                  onError={(e) => {
+                    console.error("Error loading image:", e);
+                    setError("Failed to load image");
+                  }}
+                />
+                <canvas
+                  ref={canvasRef}
+                  className="absolute top-0 left-0 w-full h-full pointer-events-none"
+                />
+              </>
+            )}
           </div>
         )}
 

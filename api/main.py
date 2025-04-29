@@ -1,5 +1,5 @@
 from fastapi import FastAPI, UploadFile, File, Depends
-from detect import read_imagefile, detect_objects
+from detect import read_imagefile, detect_objects, detect_objects_in_video
 from database import get_db
 from datetime import datetime, timezone
 from fastapi.middleware.cors import CORSMiddleware
@@ -28,42 +28,31 @@ async def detect(file: UploadFile = File(...), db=Depends(get_db)):
     if file.content_type.startswith("image/"):
         latitude, longitude = extract_coordinates_from_image_bytes(contents)
         image = read_imagefile(contents)
+        detections = detect_objects(image)
+
     elif file.content_type.startswith("video/"):
         latitude, longitude = extract_coordinates_from_video_bytes(contents)
-        image = None
+        detections = detect_objects_in_video(contents)
+
     else:
         return {"message": "Unsupported file type"}
 
-    # 👇👇 ADD THESE PRINTS for debugging
-    # print("File received:", file.filename)
-    # print("Latitude extracted:", latitude)
-    # print("Longitude extracted:", longitude)
-
-    if image is not None:
-        detections = detect_objects(image)
-
-        if detections:
-            record = {
-                "detections": detections,
-                "location": {"latitude": latitude, "longitude": longitude},
-                "timestamp": datetime.now(timezone.utc),
-            }
-            collection.insert_one(record)
-            return {
-                "message": "Detections saved",
-                "detections": detections,
-                "latitude": latitude,
-                "longitude": longitude,
-            }
-        else:
-            return {
-                "message": "No detections",
-                "latitude": latitude,
-                "longitude": longitude,
-            }
+    if detections:
+        record = {
+            "detections": detections,
+            "location": {"latitude": latitude, "longitude": longitude},
+            "timestamp": datetime.now(timezone.utc),
+        }
+        collection.insert_one(record)
+        return {
+            "message": "Detections saved",
+            "detections": detections,
+            "latitude": latitude,
+            "longitude": longitude,
+        }
 
     return {
-        "message": "Video uploaded. GPS extracted",
+        "message": "No detections",
         "latitude": latitude,
         "longitude": longitude,
     }

@@ -34,6 +34,16 @@ const greenIcon = new L.Icon({
   shadowSize: [41, 41],
 });
 
+const currentLocationIcon = new L.Icon({
+  iconUrl:
+    "https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-violet.png",
+  shadowUrl: "https://unpkg.com/leaflet@1.9.3/dist/images/marker-shadow.png",
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+  popupAnchor: [1, -34],
+  shadowSize: [41, 41],
+});
+
 const defaultIcon = new L.Icon.Default();
 
 const MyMapComponent = () => {
@@ -94,39 +104,54 @@ const MyMapComponent = () => {
         🚧 Pothole, Crack, and Open Manhole Locations Map
       </h2>
       <div className="w-full sm:max-w-6xl h-[85vh] rounded-2xl overflow-hidden shadow-2xl border-2 border-gray-300 px-2 sm:px-0">
-        <MapContainer
-          center={position}
-          zoom={12}
-          className="h-full w-full rounded-2xl"
-        >
-          <TileLayer
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            attribution='&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-          />
-          <Marker position={position}>
-            <Popup>You are here 📍</Popup>
-          </Marker>
-
-          {locations.map((loc, index) => (
-            <Marker
-              key={index}
-              position={[loc.location.latitude, loc.location.longitude]}
-              icon={getIconByClassName(loc.class_name)}
-            >
-              <Popup>
-                <div className="text-center">
-                  <h3 className="font-semibold capitalize">{loc.class_name}</h3>
-                  <p className="text-gray-600">
-                    Latitude: {loc.location.latitude.toFixed(4)}
-                  </p>
-                  <p className="text-gray-600">
-                    Longitude: {loc.location.longitude.toFixed(4)}
-                  </p>
-                </div>
-              </Popup>
+        {position ? (
+          <MapContainer
+            center={position}
+            zoom={12}
+            className="h-full w-full rounded-2xl"
+          >
+            <TileLayer
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              attribution='&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+            />
+            <Marker position={position} icon={currentLocationIcon}>
+              <Popup>You are here 📍</Popup>
             </Marker>
-          ))}
-        </MapContainer>
+
+            {locations
+              .filter(
+                (loc) =>
+                  loc.location &&
+                  loc.location.latitude != null &&
+                  loc.location.longitude != null
+              )
+              .map((loc, index) => (
+                <Marker
+                  key={index}
+                  position={[loc.location.latitude, loc.location.longitude]}
+                  icon={getIconByClassName(loc.class_name)}
+                >
+                  <Popup>
+                    <div className="text-center">
+                      <h3 className="font-semibold capitalize">
+                        {loc.class_name}
+                      </h3>
+                      <p className="text-gray-600">
+                        Latitude: {loc.location.latitude.toFixed(4)}
+                      </p>
+                      <p className="text-gray-600">
+                        Longitude: {loc.location.longitude.toFixed(4)}
+                      </p>
+                    </div>
+                  </Popup>
+                </Marker>
+              ))}
+          </MapContainer>
+        ) : (
+          <div className="text-center mt-10 text-lg text-gray-700">
+            Loading map and location...
+          </div>
+        )}
       </div>
     </div>
   );
