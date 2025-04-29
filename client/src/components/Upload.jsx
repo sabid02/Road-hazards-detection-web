@@ -143,6 +143,7 @@ const Upload = () => {
   return (
     <div className="container mx-auto p-4 max-w-3xl">
       <div className="flex flex-col gap-4">
+        {/* Upload & Detect Buttons */}
         <div className="flex gap-4 justify-center">
           <label className="inline-flex items-center gap-2 cursor-pointer bg-gradient-to-r from-amber-400 to-yellow-500 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:from-amber-500 hover:to-yellow-600 transition duration-300">
             <span>📁 Upload Image</span>
@@ -192,12 +193,14 @@ const Upload = () => {
           </button>
         </div>
 
+        {/* Error Message */}
         {error && (
           <div className="p-4 bg-red-100 text-red-700 rounded-lg">
             ⚠️ {error}
           </div>
         )}
 
+        {/* Image Preview with Canvas Overlay */}
         {uploadedFile && (
           <div className="relative border rounded-lg overflow-hidden bg-gray-50">
             <img
@@ -214,59 +217,59 @@ const Upload = () => {
           </div>
         )}
 
-        {detectionResults && (
-          <div className="p-4 bg-white rounded-lg shadow">
-            <h3 className="text-lg font-bold mb-4">Detection Summary</h3>
+        {/* Detection Results */}
+        {detectionResults ? (
+          detectionResults.detections?.length > 0 ? (
+            <div className="p-4 bg-white rounded-lg shadow">
+              <h3 className="text-lg font-bold mb-4">Detection Summary</h3>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-              {/* Total Detections */}
-              <div className="flex justify-between items-center p-4 bg-gray-100 rounded-lg shadow-sm">
-                <span className="text-gray-700 font-medium">
-                  Total Detections:
-                </span>
-                <span className="text-indigo-600 font-bold text-lg">
-                  {detectionResults.detections.length}
-                </span>
-              </div>
-
-              {/* Class-wise Detections */}
-              {Object.entries(CLASS_NAMES).map(([id, name]) => (
-                <div
-                  key={id}
-                  className="flex justify-between items-center p-4 bg-gray-50 hover:bg-gray-100 transition rounded-lg shadow-sm"
-                >
-                  <span className="text-gray-700">{name}s:</span>
-                  <span className="text-green-600 font-semibold">
-                    {
-                      detectionResults.detections.filter(
-                        (d) => d.class_id == id
-                      ).length
-                    }
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                {/* Total Detections */}
+                <div className="flex justify-between items-center p-4 bg-gray-100 rounded-lg shadow-sm">
+                  <span className="text-gray-700 font-medium">
+                    Total Detections:
+                  </span>
+                  <span className="text-indigo-600 font-bold text-lg">
+                    {detectionResults.detections.length}
                   </span>
                 </div>
-              ))}
-            </div>
-            <div className="flex flex-col sm:flex-row sm:justify-between items-center bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 font-semibold p-4 mt-6 rounded-lg shadow-md space-y-2 sm:space-y-0 sm:space-x-4">
-              <div className="flex items-center">
-                <span className="mr-2">🌍 Longitude:</span>
-                <span>{detectionResults.longitude}</span>
-              </div>
-              <div className="flex items-center">
-                <span className="mr-2">📍 Latitude:</span>
-                <span>{detectionResults.latitude}</span>
-              </div>
-            </div>
 
-            <details className="mt-4">
-              <summary className="cursor-pointer text-blue-600">
-                Raw Data
-              </summary>
-              <pre className="mt-2 p-4 bg-gray-50 rounded overflow-auto max-h-96">
-                {JSON.stringify(detectionResults, null, 2)}
-              </pre>
-            </details>
-          </div>
-        )}
+                {/* Per-Class Detections */}
+                {Object.entries(CLASS_NAMES).map(([id, name]) => (
+                  <div
+                    key={id}
+                    className="flex justify-between items-center p-4 bg-gray-50 hover:bg-gray-100 transition rounded-lg shadow-sm"
+                  >
+                    <span className="text-gray-700">{name}s:</span>
+                    <span className="text-green-600 font-semibold">
+                      {
+                        detectionResults.detections.filter(
+                          (d) => d.class_id == id
+                        ).length
+                      }
+                    </span>
+                  </div>
+                ))}
+              </div>
+
+              {/* GPS Info */}
+              <div className="flex flex-col sm:flex-row sm:justify-between items-center bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 font-semibold p-4 mt-6 rounded-lg shadow-md space-y-2 sm:space-y-0 sm:space-x-4">
+                <div className="flex items-center">
+                  <span className="mr-2">🌍 Longitude:</span>
+                  <span>{detectionResults.longitude || "N/A"}</span>
+                </div>
+                <div className="flex items-center">
+                  <span className="mr-2">📍 Latitude:</span>
+                  <span>{detectionResults.latitude || "N/A"}</span>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="p-4 bg-red-100 text-red-700 rounded-lg">
+              {detectionResults.message || "No detections found"}
+            </div>
+          )
+        ) : null}
       </div>
     </div>
   );
