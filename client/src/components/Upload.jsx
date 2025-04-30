@@ -260,7 +260,7 @@ const Upload = () => {
         {/* Upload & Detect Buttons */}
         <div className="flex gap-4 justify-center">
           <label className="inline-flex items-center gap-2 cursor-pointer bg-gradient-to-r from-amber-400 to-yellow-500 text-white font-semibold py-2 px-6 rounded-lg shadow-md hover:from-amber-500 hover:to-yellow-600 transition duration-300">
-            <span>📁 Upload Image</span>
+            <span>📁 Upload Image/Video</span>
             <input
               ref={fileInputRef}
               type="file"

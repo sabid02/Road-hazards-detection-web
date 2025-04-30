@@ -7,7 +7,8 @@ from extract import (
     extract_coordinates_from_image_bytes,
     extract_coordinates_from_video_bytes,
 )
-
+from detect import generate_frames
+from fastapi.responses import StreamingResponse
 
 app = FastAPI()
 
@@ -84,3 +85,10 @@ async def get_locations(db=Depends(get_db)):
         }
         for location in locations
     ]
+
+
+@app.get("/live-stream")
+def live_stream():
+    return StreamingResponse(
+        generate_frames(), media_type="multipart/x-mixed-replace; boundary=frame"
+    )

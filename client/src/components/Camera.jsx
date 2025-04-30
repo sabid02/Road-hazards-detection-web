@@ -153,6 +153,50 @@ const Camera = () => {
     setIsRecording(false);
   };
 
+  const detectCapturedPhoto = async () => {
+    if (!capturedImage) return;
+
+    try {
+      const blob = await (await fetch(capturedImage)).blob();
+      const formData = new FormData();
+      formData.append("file", blob, "captured_photo.png");
+
+      const response = await fetch("http://localhost:8000/detect", {
+        method: "POST",
+        body: formData,
+      });
+
+      const result = await response.json();
+      console.log("🧠 Detection result (image):", result);
+      alert("Detection completed for image!");
+    } catch (err) {
+      console.error("Detection failed:", err);
+      alert("Detection failed.");
+    }
+  };
+
+  const detectRecordedVideo = async () => {
+    if (!recordedChunks.length) return;
+
+    const blob = new Blob(recordedChunks, { type: "video/webm" });
+    const formData = new FormData();
+    formData.append("file", blob, "recorded_video.webm");
+
+    try {
+      const response = await fetch("http://localhost:8000/detect", {
+        method: "POST",
+        body: formData,
+      });
+
+      const result = await response.json();
+      console.log("🧠 Detection result (video):", result);
+      alert("Detection completed for video!");
+    } catch (err) {
+      console.error("Detection failed:", err);
+      alert("Detection failed.");
+    }
+  };
+
   return (
     <div className="w-full min-h-screen bg-gray-100">
       <nav className="w-full bg-yellow-500 shadow-md text-white px-6 py-4 flex justify-between items-center">
@@ -264,7 +308,14 @@ const Camera = () => {
 
         {(capturedImage || recordedVideoURL) && (
           <button
-            onClick={() => alert("Submitted!")} // 👈 you can replace with real submit logic
+            onClick={() => {
+              if (capturedImage) {
+                detectCapturedPhoto();
+              } else if (recordedVideoURL) {
+                detectRecordedVideo();
+              }
+            }}
+            // 👈 you can replace with real submit logic
             className="bg-purple-600 text-white px-6 py-3 rounded-md hover:bg-purple-700 transition mt-4"
           >
             ✅ Submit

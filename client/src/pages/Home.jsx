@@ -30,24 +30,72 @@ const Home = () => {
           <MyMapComponent />
         </section>
 
-        {/* Upload Section */}
-        <section className="w-full max-w-3xl bg-white rounded-3xl shadow-lg p-10 border border-blue-200">
-          <h2 className="text-2xl font-bold text-yellow-500 text-center mb-4">
-            📸 Upload or Capture Evidence
-          </h2>
-          <p className="text-center text-gray-600 mb-6">
-            Upload photos or videos of damaged roads. We'll detect hazards and
-            tag their locations for you.
-          </p>
-          <div className="flex justify-center mb-6">
-            <Link
-              to="/camera"
-              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl transition-transform transform hover:scale-105 text-lg font-semibold shadow-md"
-            >
-              📷 Launch Camera
-            </Link>
+        <section className="w-full max-w-4xl bg-white rounded-3xl shadow-xl p-8 border-2 border-blue-100">
+          <div className="text-center mb-8">
+            <h2 className="text-3xl font-bold text-yellow-500 mb-3">
+              📍 Report Road Hazards
+            </h2>
+            <p className="text-gray-600 text-lg">
+              Choose your method to document road issues
+            </p>
           </div>
-          <Upload />
+
+          <div className="grid md:grid-cols-2 gap-6 mb-8">
+            {/* Camera Options Card */}
+            <div className="bg-blue-50 p-6 rounded-xl border-2 border-dashed border-blue-200">
+              <h3 className="text-xl font-semibold text-blue-800 mb-4 flex items-center gap-2">
+                <span className="bg-blue-100 p-2 rounded-lg">📸</span>
+                Media Capture
+              </h3>
+              <div className="space-y-4">
+                <Link
+                  to="/camera"
+                  className="flex items-center justify-center gap-2 bg-white hover:bg-blue-50 text-blue-800 px-6 py-4 rounded-lg transition-all border-2 border-blue-200 hover:border-blue-300 hover:shadow-md"
+                >
+                  <svg
+                    className="w-5 h-5"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path d="M4 5a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-1.586a1 1 0 01-.707-.293l-1.121-1.121A2 2 0 0011.172 3H8.828a2 2 0 00-1.414.586L6.293 4.707A1 1 0 015.586 5H4zm6 9a3 3 0 100-6 3 3 0 000 6z" />
+                  </svg>
+                  Take Photo
+                </Link>
+                <Link
+                  to="/live"
+                  className="flex items-center justify-center gap-2 bg-white hover:bg-blue-50 text-blue-800 px-6 py-4 rounded-lg transition-all border-2 border-blue-200 hover:border-blue-300 hover:shadow-md"
+                >
+                  <svg
+                    className="w-5 h-5"
+                    fill="currentColor"
+                    viewBox="0 0 20 20"
+                  >
+                    <path d="M2 6a2 2 0 012-2h6a2 2 0 012 2v8a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM14.553 7.106A1 1 0 0014 8v4a1 1 0 00.553.894l2 1A1 1 0 0018 13V7a1 1 0 00-1.447-.894l-2 1z" />
+                  </svg>
+                  Start Live Recording
+                </Link>
+              </div>
+            </div>
+
+            {/* Upload Card */}
+            <div className="bg-orange-50 p-6 rounded-xl border-2 border-dashed border-orange-200">
+              <h3 className="text-xl font-semibold text-orange-800 mb-4 flex items-center gap-2">
+                <span className="bg-orange-100 p-2 rounded-lg">📁</span>
+                File Upload
+              </h3>
+              <div className="space-y-4">
+                <Upload />
+                <p className="text-sm text-orange-700 text-center">
+                  Supported formats: JPG, PNG, MP4 (Max 100MB)
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <p className="text-center text-gray-500 text-sm mt-4">
+            All submissions are automatically geotagged and reviewed by our AI
+            system
+          </p>
         </section>
 
         {/* Image Section */}

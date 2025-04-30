@@ -2,6 +2,8 @@ from ultralytics import YOLO
 import cv2
 import numpy as np
 import tempfile
+import os
+from fastapi.responses import StreamingResponse
 
 # Load your YOLO model once
 model = YOLO("models/best1.pt")
@@ -75,3 +77,32 @@ def detect_objects_in_video(video_bytes: bytes):
 
     cap.release()
     return all_detections
+
+
+def generate_frames(source=0):
+    cap = cv2.VideoCapture(source)
+
+    if not cap.isOpened():
+        raise RuntimeError("Could not open video source.")
+
+    while True:
+        ret, frame = cap.read()
+        if not ret:
+            break
+
+        # Run YOLOv8 prediction on the frame
+        results = model.predict(source=frame, conf=0.5, save=False)
+
+        for r in results:
+            for box in r.boxes.xyxy:
+                x1, y1, x2, y2 = map(int, box)
+                cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+
+        # Encode frame to JPEG
+        ret, buffer = cv2.imencode(".jpg", frame)
+        frame = buffer.tobytes()
+
+        # Yield frame in streaming format
+        yield (b"--frame\r\n" b"Content-Type: image/jpeg\r\n\r\n" + frame + b"\r\n")
+
+    cap.release()
