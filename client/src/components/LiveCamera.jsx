@@ -180,7 +180,7 @@ const LiveCamera = () => {
             ref={webcamRef}
             screenshotFormat="image/jpeg"
             videoConstraints={videoConstraints}
-            className="w-full h-auto"
+            className="w-[1080px] h-auto"
             onUserMediaError={(error) => console.error("Camera error:", error)}
           />
           {/* <video
