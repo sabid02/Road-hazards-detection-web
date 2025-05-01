@@ -1,4 +1,4 @@
-from fastapi import FastAPI, UploadFile, File, Depends
+from fastapi import FastAPI, UploadFile, HTTPException, File, Depends
 from detect import read_imagefile, detect_objects, detect_objects_in_video
 from database import get_db
 from datetime import datetime, timezone
@@ -9,6 +9,12 @@ from extract import (
 )
 from detect import generate_frames
 from fastapi.responses import StreamingResponse
+import base64
+from pydantic import BaseModel
+
+
+import traceback
+
 
 app = FastAPI()
 
@@ -87,8 +93,60 @@ async def get_locations(db=Depends(get_db)):
     ]
 
 
-@app.get("/live-stream")
-def live_stream():
-    return StreamingResponse(
-        generate_frames(), media_type="multipart/x-mixed-replace; boundary=frame"
-    )
+# @app.post("/live-stream")
+# def live_stream():
+#     return StreamingResponse(
+#         generate_frames(), media_type="multipart/x-mixed-replace; boundary=frame"
+#     )
+
+
+class ImagePayload(BaseModel):
+    image: str  # base64-encoded image
+    latitude: float | None = None
+    longitude: float | None = None
+
+
+@app.post("/detect-image")
+async def detect_image(payload: ImagePayload, db=Depends(get_db)):
+    try:
+        print("[INFO] Received image data...")
+
+        # Handle optional prefix for base64 image
+        if "," in payload.image:
+            _, encoded = payload.image.split(",", 1)
+        else:
+            encoded = payload.image
+
+        print("[INFO] Decoding base64 image...")
+        image_bytes = base64.b64decode(encoded)
+
+        print("[INFO] Reading image with OpenCV...")
+        img = read_imagefile(image_bytes)
+
+        print("[INFO] Running detection...")
+        detections = detect_objects(img)
+
+        print("[INFO] Detection complete.")
+
+        # Send back detections with the received latitude and longitude
+        if not detections:
+            return {
+                "detections": [],
+                "message": "No detections found",
+                "latitude": payload.latitude
+                or 0.0,  # Default to 0.0 if latitude is None
+                "longitude": payload.longitude
+                or 0.0,  # Default to 0.0 if longitude is None
+            }
+
+        return {
+            "detections": detections,
+            "latitude": payload.latitude or 0.0,  # Default to 0.0 if latitude is None
+            "longitude": payload.longitude
+            or 0.0,  # Default to 0.0 if longitude is None
+        }
+
+    except Exception as e:
+        print("[ERROR] Failed to process image:", str(e))
+        traceback.print_exc()
+        raise HTTPException(status_code=400, detail=str(e))

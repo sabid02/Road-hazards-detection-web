@@ -12,6 +12,8 @@ model = YOLO("models/best1.pt")
 def read_imagefile(file) -> np.ndarray:
     file_bytes = np.frombuffer(file, np.uint8)
     img = cv2.imdecode(file_bytes, cv2.IMREAD_COLOR)
+    if img is None:
+        raise ValueError("Image decoding failed — OpenCV returned None.")
     return img
 
 

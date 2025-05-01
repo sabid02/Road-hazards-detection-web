@@ -12,6 +12,7 @@ const LiveCamera = () => {
     error: null,
   });
   const [cameraActive, setCameraActive] = useState(true);
+  const [potholeImage, setPotholeImage] = useState(null);
 
   const videoConstraints = React.useMemo(
     () => ({
@@ -21,6 +22,48 @@ const LiveCamera = () => {
     }),
     []
   );
+
+  // Load the pothole image
+  // useEffect(() => {
+  //   const img = new Image();
+  //   img.src = "/pothole.jpg"; // Path to pothole image (can be local or URL)
+  //   img.onload = () => {
+  //     setPotholeImage(img);
+  //   };
+  // }, []);
+
+  // Draw webcam feed and pothole image overlay
+  // const drawOverlay = useCallback(() => {
+  //   const canvas = canvasRef.current;
+  //   if (!canvas || !webcamRef.current || !potholeImage) return;
+
+  //   const ctx = canvas.getContext("2d");
+  //   const video = webcamRef.current.video;
+
+  //   // Draw the webcam feed onto the canvas
+  //   ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+  //   // Now draw the pothole image as an overlay at a fixed position
+  //   const potholeWidth = 200; // Adjust the size of the pothole image
+  //   const potholeHeight = 150;
+  //   const potholeX = (canvas.width - potholeWidth) / 2; // Position it at the center
+  //   const potholeY = (canvas.height - potholeHeight) / 2;
+
+  //   // Draw the pothole image
+  //   ctx.drawImage(
+  //     potholeImage,
+  //     potholeX,
+  //     potholeY,
+  //     potholeWidth,
+  //     potholeHeight
+  //   );
+  // }, [potholeImage]);
+
+  // Set up a loop to draw every frame
+  // useEffect(() => {
+  //   const interval = setInterval(drawOverlay, 100); // Draw every 100ms
+  //   return () => clearInterval(interval);
+  // }, [drawOverlay]);
 
   const drawDetections = useCallback((detections) => {
     const canvas = canvasRef.current;
@@ -85,63 +128,47 @@ const LiveCamera = () => {
     setProcessing(true);
     try {
       const imageSrc = webcamRef.current.getScreenshot();
+
       if (!imageSrc) return;
 
-      const response = await fetch("http://localhost:8000/live-stream", {
+      const response = await fetch("http://localhost:8000/detect-image", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ image: imageSrc }),
+        body: JSON.stringify({
+          image: imageSrc,
+          latitude: location.lat,
+          longitude: location.lng,
+        }),
       });
 
       if (!response.ok) throw new Error("API request failed");
 
       const responseData = await response.json();
       console.log("API Response:", responseData);
-      // Validate and format detections
+
       const validDetections = (responseData.detections || []).map((d) => ({
         class_name: String(d.class_name || "unknown"),
         confidence: Number(d.confidence) || 0,
         bbox: Array.isArray(d.bbox) ? d.bbox : [0, 0, 0, 0],
       }));
 
-      // Update state
-
       setDetections(validDetections);
-
-      const lat = Number(responseData.latitude);
-      const lng = Number(responseData.longitude);
-      const isValidCoordinate = (num) =>
-        !isNaN(num) && num !== null && num !== undefined;
-
-      setLocation({
-        lat: isValidCoordinate(lat) ? lat : null,
-        lng: isValidCoordinate(lng) ? lng : null,
-      });
       drawDetections(validDetections);
     } catch (error) {
       console.error("Detection error:", error);
     } finally {
       setProcessing(false);
     }
-  }, [drawDetections, processing]);
+  }, [drawDetections, processing, location.lat, location.lng]);
 
   useEffect(() => {
     const interval = setInterval(processFrame, 100);
     return () => clearInterval(interval);
   }, [processFrame]);
 
-  useEffect(() => {
-    if (!cameraActive) return;
-
-    const interval = setInterval(processFrame, 100);
-    return () => clearInterval(interval);
-  }, [processFrame, cameraActive]);
-
-  const exitCamera = () => {
+  const stopCamera = () => {
     setCameraActive(false);
-    if (webcamRef.current && webcamRef.current.stream) {
-      webcamRef.current.stream.getTracks().forEach((track) => track.stop());
-    }
+    // Add any additional cleanup or stopping logic here if needed
   };
 
   return (
@@ -156,6 +183,15 @@ const LiveCamera = () => {
             className="w-full h-auto"
             onUserMediaError={(error) => console.error("Camera error:", error)}
           />
+          {/* <video
+            ref={webcamRef}
+            className="w-full h-auto"
+            autoPlay
+            muted
+            loop
+            src="/gps1.mp4"
+            // This will simulate the webcam feed
+          /> */}
 
           <canvas
             ref={canvasRef}
@@ -171,7 +207,7 @@ const LiveCamera = () => {
 
           {/* Exit Button */}
           <button
-            onClick={exitCamera}
+            onClick={stopCamera}
             className="absolute top-4 right-4 bg-green-500 text-white px-3 py-2 rounded-full text-xs font-bold hover:bg-red-600 transition"
           >
             Exit
