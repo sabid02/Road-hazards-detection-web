@@ -1,5 +1,6 @@
 import React, { useRef, useEffect, useState, useCallback } from "react";
 import Webcam from "react-webcam";
+import { Link } from "react-router-dom";
 
 const LiveCamera = () => {
   const webcamRef = useRef(null);
@@ -131,7 +132,7 @@ const LiveCamera = () => {
 
       if (!imageSrc) return;
 
-      const response = await fetch("http://localhost:8000/detect-image", {
+      const response = await fetch("http://localhost:8000/live-stream", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -205,13 +206,12 @@ const LiveCamera = () => {
             LIVE
           </div>
 
-          {/* Exit Button */}
-          <button
-            onClick={stopCamera}
+          <Link
+            to="/"
             className="absolute top-4 right-4 bg-green-500 text-white px-3 py-2 rounded-full text-xs font-bold hover:bg-red-600 transition"
           >
             Exit
-          </button>
+          </Link>
 
           {/* Detection results */}
           <div className="detection-results p-4 bg-black/50 text-white rounded-lg absolute bottom-4 left-4">

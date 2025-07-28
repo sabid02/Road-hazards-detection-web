@@ -50,7 +50,16 @@ const Upload = () => {
       return;
     }
 
+    // Revoke previous file URL to prevent memory leaks
     if (uploadedFile) URL.revokeObjectURL(uploadedFile);
+
+    // Clear canvas and reset detection results
+    const canvas = canvasRef.current;
+    if (canvas) {
+      const ctx = canvas.getContext("2d");
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+    setDetectionResults(null); // Reset detections immediately
 
     const fileUrl = URL.createObjectURL(file);
     const isVideo = file.type.startsWith("video/");
@@ -58,9 +67,9 @@ const Upload = () => {
     setFileType(isVideo ? "video" : "image");
     setMediaType(file.type);
     setUploadedFile(fileUrl);
-    setDetectionResults(null);
     setError(null);
   };
+
   const handleDetection = useCallback(async () => {
     try {
       setLoading(true);
@@ -395,14 +404,19 @@ const Upload = () => {
               </div>
 
               {/* GPS Info */}
-              <div className="flex flex-col sm:flex-row sm:justify-between items-center bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 font-semibold p-4 mt-6 rounded-lg shadow-md space-y-2 sm:space-y-0 sm:space-x-4">
+              {/* GPS Info */}
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center items-start bg-gradient-to-r from-blue-100 to-blue-200 text-blue-800 font-semibold p-4 mt-6 rounded-lg shadow-md gap-2 sm:gap-4 flex-wrap">
                 <div className="flex items-center">
                   <span className="mr-2">🌍 Longitude:</span>
-                  <span>{detectionResults.longitude || "N/A"}</span>
+                  <span className="break-words">
+                    {detectionResults.longitude || "N/A"}
+                  </span>
                 </div>
                 <div className="flex items-center">
                   <span className="mr-2">📍 Latitude:</span>
-                  <span>{detectionResults.latitude || "N/A"}</span>
+                  <span className="break-words">
+                    {detectionResults.latitude || "N/A"}
+                  </span>
                 </div>
               </div>
             </div>

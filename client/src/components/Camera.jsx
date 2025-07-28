@@ -11,7 +11,8 @@ const Camera = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [recordedVideoURL, setRecordedVideoURL] = useState(null);
   const [recordedChunks, setRecordedChunks] = useState([]);
-  const [photoLocation, setPhotoLocation] = useState(null); // 🛠️ Missing state added
+  const [photoLocation, setPhotoLocation] = useState(null);
+  const [result, setResult] = useState(null); // 🛠️ Missing state added
   const navigate = useNavigate();
 
   const startCamera = async () => {
@@ -37,15 +38,15 @@ const Camera = () => {
     }
   };
 
-  const stopCamera = () => {
-    if (stream) {
-      stream.getTracks().forEach((track) => track.stop());
-      setStream(null);
-    }
-    setCameraStarted(false);
-    setIsRecording(false);
-    setRecordedChunks([]);
-  };
+  // const stopCamera = () => {
+  //   if (stream) {
+  //     stream.getTracks().forEach((track) => track.stop());
+  //     setStream(null);
+  //   }
+  //   setCameraStarted(false);
+  //   setIsRecording(false);
+  //   setRecordedChunks([]);
+  // };
 
   const capturePhoto = () => {
     if (!videoRef.current) return;
@@ -82,64 +83,98 @@ const Camera = () => {
   };
 
   const startRecording = async () => {
-    if (!videoRef.current) return;
+    if (!videoRef.current) {
+      console.error("❌ Video element not found");
+      return;
+    }
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
+        console.log("📍 Location:", latitude, longitude);
 
         const canvas = document.createElement("canvas");
         const video = videoRef.current;
         canvas.width = video.videoWidth;
         canvas.height = video.videoHeight;
 
+        if (!canvas.width || !canvas.height) {
+          console.error(
+            "❌ Invalid canvas dimensions:",
+            canvas.width,
+            canvas.height
+          );
+          return;
+        }
+
         const ctx = canvas.getContext("2d");
 
         const drawFrame = () => {
           ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-
           ctx.fillStyle = "white";
           ctx.font = "20px Arial";
           ctx.fillText(`Lat: ${latitude.toFixed(4)}`, 10, canvas.height - 30);
           ctx.fillText(`Lng: ${longitude.toFixed(4)}`, 10, canvas.height - 10);
-
           requestAnimationFrame(drawFrame);
         };
 
         drawFrame();
 
         const canvasStream = canvas.captureStream(25);
+        const audioTracks = stream?.getAudioTracks() || [];
+        console.log("🎥 Canvas Stream Tracks:", canvasStream.getVideoTracks());
+        console.log("🎙️ Audio Tracks:", audioTracks);
+
         const combinedStream = new MediaStream([
           ...canvasStream.getVideoTracks(),
-          ...stream.getAudioTracks(),
+          ...audioTracks,
         ]);
 
         let localChunks = [];
-        setRecordedChunks([]);
-        const recorder = new MediaRecorder(combinedStream);
+        setRecordedChunks([]); // Reset chunks only when starting a new recording
+        console.log("🔄 Reset recordedChunks");
+
+        const recorder = new MediaRecorder(combinedStream, {
+          mimeType: "video/webm",
+        });
         mediaRecorderRef.current = recorder;
 
         recorder.ondataavailable = (event) => {
+          console.log("📼 Data available:", event.data.size, "bytes");
           if (event.data.size > 0) {
             localChunks.push(event.data);
+            console.log("✅ Added chunk, total chunks:", localChunks.length);
+          } else {
+            console.warn("⚠️ Empty chunk received");
           }
         };
 
         recorder.onstop = () => {
+          console.log("🛑 Recorder stopped, chunks:", localChunks.length);
+          setRecordedChunks(localChunks); // Update state with chunks
           const blob = new Blob(localChunks, { type: "video/webm" });
+          console.log("📹 Blob created, size:", blob.size);
           const videoURL = URL.createObjectURL(blob);
           setRecordedVideoURL(videoURL);
-          setRecordedChunks(localChunks);
 
           if (videoRef.current) {
             videoRef.current.srcObject = null;
           }
-
-          stopCamera();
+          // Do NOT call stopCamera here to avoid resetting recordedChunks
         };
 
-        recorder.start();
-        setIsRecording(true);
+        recorder.onerror = (event) => {
+          console.error("❌ MediaRecorder error:", event.error);
+        };
+
+        try {
+          recorder.start();
+          console.log("🎬 Recording started");
+          setIsRecording(true);
+        } catch (err) {
+          console.error("❌ Failed to start recording:", err);
+          alert("Failed to start recording: " + err.message);
+        }
       },
       (error) => {
         console.error("❌ Location error:", error);
@@ -148,9 +183,30 @@ const Camera = () => {
     );
   };
 
-  const stopRecording = () => {
-    mediaRecorderRef.current?.stop();
+  const stopCamera = () => {
+    if (stream) {
+      stream.getTracks().forEach((track) => track.stop());
+      setStream(null);
+    }
+    setCameraStarted(false);
     setIsRecording(false);
+  };
+
+  const stopRecording = () => {
+    if (
+      mediaRecorderRef.current &&
+      mediaRecorderRef.current.state !== "inactive"
+    ) {
+      console.log(
+        "🛑 Stopping recording, state:",
+        mediaRecorderRef.current.state
+      );
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+      stopCamera(); // Call stopCamera here to stop the stream
+    } else {
+      console.warn("⚠️ No active recorder to stop");
+    }
   };
 
   const detectCapturedPhoto = async () => {
@@ -176,24 +232,48 @@ const Camera = () => {
   };
 
   const detectRecordedVideo = async () => {
-    if (!recordedChunks.length) return;
-
-    const blob = new Blob(recordedChunks, { type: "video/webm" });
-    const formData = new FormData();
-    formData.append("file", blob, "recorded_video.webm");
+    console.log("📼 Checking recordedChunks:", recordedChunks.length);
+    if (!recordedChunks.length) {
+      console.error("❌ No video data available to send");
+      alert("No video data available to send. Please record a video first.");
+      return;
+    }
 
     try {
+      const blob = new Blob(recordedChunks, { type: "video/webm" });
+      console.log("📹 Video Blob Size:", blob.size, "Type:", blob.type);
+
+      if (blob.size === 0) {
+        console.error("❌ Video blob is empty");
+        alert("Video blob is empty. Please try recording again.");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append("file", blob, "recorded_video.webm");
+
+      for (let [key, value] of formData.entries()) {
+        console.log(`FormData Entry: ${key}`, value);
+      }
+
       const response = await fetch("http://localhost:8000/detect", {
         method: "POST",
         body: formData,
       });
 
-      const result = await response.json();
-      console.log("🧠 Detection result (video):", result);
+      if (!response.ok) {
+        throw new Error(
+          `Server responded with ${response.status}: ${response.statusText}`
+        );
+      }
+
+      const resultData = await response.json();
+      console.log("🧠 Detection result (video):", resultData);
+      setResult(resultData); // Update state with the result
       alert("Detection completed for video!");
     } catch (err) {
-      console.error("Detection failed:", err);
-      alert("Detection failed.");
+      console.error("❌ Detection failed:", err);
+      alert(`Detection failed: ${err.message}`);
     }
   };
 
@@ -321,6 +401,27 @@ const Camera = () => {
             ✅ Submit
           </button>
         )}
+        <div className="mt-6 p-4 rounded-2xl shadow-lg bg-white border border-gray-200 max-w-md mx-auto">
+          {result ? (
+            <div className="space-y-2 text-gray-700">
+              <p className="font-semibold">
+                <span className="text-blue-600">Message:</span> {result.message}
+              </p>
+              <p>
+                <span className="font-medium text-green-600">Latitude:</span>{" "}
+                {result.latitude ?? "N/A"}
+              </p>
+              <p>
+                <span className="font-medium text-red-600">Longitude:</span>{" "}
+                {result.longitude ?? "N/A"}
+              </p>
+            </div>
+          ) : (
+            <p className="text-center text-gray-500 italic">
+              No detection result yet.
+            </p>
+          )}
+        </div>
 
         {error && <p className="text-red-600 text-sm mt-2">Error: {error}</p>}
       </div>
