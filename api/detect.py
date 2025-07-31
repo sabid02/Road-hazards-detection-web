@@ -12,7 +12,7 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Load YOLO model
-model = YOLO("models/best4.pt")
+model = YOLO("models/best.pt")
 
 
 def read_imagefile(file) -> np.ndarray:

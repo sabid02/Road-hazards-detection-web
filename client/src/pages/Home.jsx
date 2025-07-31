@@ -1,6 +1,7 @@
 import MyMapComponent from "../components/MyMapComponent";
 import Upload from "../components/Upload";
 import { Link } from "react-router-dom";
+import NotificationSystem from "../components/NotificationSystem";
 
 const Home = () => {
   return (
@@ -23,10 +24,15 @@ const Home = () => {
           <h2 className="text-3xl font-bold text-yellow-500 mb-4 text-center drop-shadow-sm">
             🗺️ View and Track Hazards
           </h2>
+
           <p className="text-center text-gray-600 mb-6 max-w-2xl mx-auto">
             Explore all reported hazards on the map. Tap on a marker to see
             details like type, image, and GPS coordinates.
           </p>
+          <div className="mb-3 border border-gray-300 rounded-lg p-4">
+            <h1 className="font-bold text-red-600">Urgent</h1>
+            <NotificationSystem apiUrl="your-api-endpoint-here" />
+          </div>
           <MyMapComponent />
         </section>
 

@@ -87,11 +87,11 @@ const MyMapComponent = () => {
   }
 
   const getIconByClassName = (className) => {
-    if (className.toLowerCase() === "pothole") {
+    if (className.toLowerCase() === "open manhole") {
       return redIcon;
-    } else if (className.toLowerCase() === "crack") {
+    } else if (className.toLowerCase() === "pothole") {
       return blueIcon;
-    } else if (className.toLowerCase() === "open manhole") {
+    } else if (className.toLowerCase() === "cracks") {
       return greenIcon;
     } else {
       return defaultIcon;
